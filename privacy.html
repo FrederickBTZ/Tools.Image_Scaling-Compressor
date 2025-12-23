@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacidad y Seguridad – Tools Image Scaling & Compressor</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <meta name="theme-color" content="#2E7D32">
+    <style>
+        :root {
+            --bg: #e8f5e9;
+            --green-dark: #1b5e20;
+            --green-main: #2e7d32;
+            --green-light: #c8e6c9;
+            --card: #ffffff;
+            --text: #333333;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo-area img {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+            padding: 40px;
+            border-top: 5px solid var(--green-main);
+        }
+
+        h1 { color: var(--green-dark); margin-bottom: 10px; }
+        h2 { color: var(--green-main); margin-top: 30px; border-bottom: 1px solid var(--green-light); padding-bottom: 10px; }
+        
+        .shield-icon {
+            font-size: 50px;
+            color: var(--green-main);
+            margin-bottom: 20px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .feature-item {
+            background: #f1f8f1;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .feature-item strong {
+            display: block;
+            color: var(--green-dark);
+            margin-bottom: 8px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            color: var(--green-main);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-link:hover { text-decoration: underline; }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 0.9em;
+            color: #666;
+            padding-bottom: 40px;
+        }
+
+        @media (max-width: 600px) {
+            .card { padding: 25px; }
+            h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="logo-area">
+            <img src="favicon.ico" alt="Logo">
+        </div>
+        <h1>Compromiso de Privacidad</h1>
+        <p>Tu seguridad es nuestra prioridad técnica.</p>
+    </div>
+
+    <div class="card">
+        <div style="text-align: center;">
+            <div class="shield-icon">🛡️</div>
+        </div>
+        
+        <h2>Procesamiento 100% Local</h2>
+        <p>A diferencia de otras herramientas en línea, nuestra plataforma funciona bajo el principio de <strong>Client-Side Processing</strong> (Procesamiento en el lado del cliente). Esto significa que cuando subes una imagen para escalar, comprimir o recortar:</p>
+        
+        <ul>
+            <li>La imagen <strong>nunca sale de tu computadora</strong>.</li>
+            <li>No se realiza ninguna carga (upload) a servidores externos.</li>
+            <li>El navegador utiliza tus propios recursos de hardware para ejecutar los algoritmos matemáticos de interpolación bicúbica.</li>
+        </ul>
+
+        <h2>Sin Inteligencia Artificial Externa</h2>
+        <p>Muchas herramientas de IA envían tus datos a nubes privadas para procesarlos. Nosotros utilizamos scripts directos de JavaScript que se ejecutan localmente. No hay algoritmos de aprendizaje que "analicen" o "almacenen" el contenido de tus fotografías.</p>
+
+        <div class="feature-grid">
+            <div class="feature-item">
+                <strong>Sin Registros</strong>
+                No rastreamos tu IP ni guardamos historial de uso.
+            </div>
+            <div class="feature-item">
+                <strong>Sin Archivos Temporales</strong>
+                Al cerrar la pestaña, todo rastro del proceso desaparece.
+            </div>
+            <div class="feature-item">
+                <strong>Código Transparente</strong>
+                Herramientas basadas en estándares web abiertos.
+            </div>
+        </div>
+
+        <h2>¿Por qué es seguro?</h2>
+        <p>Al no existir un servidor intermedio, es físicamente imposible que ocurra una filtración de datos desde nuestra plataforma. Eres el único dueño de tus archivos desde el inicio hasta la descarga final.</p>
+
+        <a href="index.html" class="back-link">← Volver a las herramientas</a>
+    </div>
+
+    <footer>
+        &copy; 2024 Tools Image Scaling & Compressor. Procesamiento Seguro Garantizado.
+    </footer>
+</div>
+
+</body>
+</html>
