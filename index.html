@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<!-- Favicon Tools Image Scaling & Compressor -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link rel="icon" type="image/x-icon" sizes="32x32" href="favicon.ico">
 <link rel="icon" type="image/x-icon" sizes="256x256" href="favicon.ico">
 <link rel="apple-touch-icon" href="favicon.ico">
@@ -44,6 +44,9 @@ cursor:pointer;
 margin-top: 10px;
 }
 button:hover{background:var(--green);}
+.btn-zip{background:#2e7d32; margin-left: 10px;}
+.btn-zip:hover{background:#527d2e;}
+
 input,select{
 padding:8px;
 border-radius:8px;
@@ -88,6 +91,7 @@ margin-bottom:10px;
 </select><br>
 
 <button id="processButton">Escalar Todas las Imágenes</button>
+<button id="downloadZipEscalar" class="btn-zip" style="display:none;">📦 Descargar Lote (.ZIP)</button>
 
 <div id="progressContainer" style="display:none;margin-top:10px;">
 <div style="width:100%;background:#c8e6c9;border-radius:6px;overflow:hidden;">
@@ -104,6 +108,7 @@ margin-bottom:10px;
 <p>Comprime imágenes manteniendo buena calidad visual. Todo ocurre localmente en tu dispositivo, sin IA ni servidores externos.</p>
 
 <input type="file" id="upload" accept="image/*" multiple><br>
+<button id="downloadZipComp" class="btn-zip" style="display:none;">📦 Descargar Comprimidas (.ZIP)</button>
 <div id="batch-list-comp"></div>
 <canvas id="canvas" style="display:none"></canvas>
 </div>
@@ -111,6 +116,10 @@ margin-bottom:10px;
 </div>
 
 <script>
+/* Arreglos para almacenar resultados para el ZIP */
+let scaledResults = [];
+let compressedResults = [];
+
 /* ===== LÓGICA DE ESCALADO ===== */
 const input = document.getElementById('inputImage');
 const button = document.getElementById('processButton');
@@ -119,8 +128,8 @@ const progressContainer = document.getElementById('progressContainer');
 const progressBar = document.getElementById('progressBar');
 const progressText = document.getElementById('progressText');
 const batchList = document.getElementById('batch-list');
+const btnZipEscalar = document.getElementById('downloadZipEscalar');
 
-// FUNCIÓN DE INTERPOLACIÓN
 function cubicInterpolate(v0,v1,v2,v3,x){
 return v1+0.5*x*(v2-v0+x*(2*v0-5*v1+4*v2-v3+x*(3*(v1-v2)+v3-v0)));
 }
@@ -171,6 +180,8 @@ button.onclick = async () => {
     
     progressContainer.style.display = 'block';
     batchList.innerHTML = "";
+    scaledResults = []; // Reset
+    btnZipEscalar.style.display = "none";
     const sc = parseInt(scaleSelect.value);
 
     for (let i = 0; i < files.length; i++) {
@@ -193,6 +204,8 @@ button.onclick = async () => {
         });
 
         const url = canvasResult.toDataURL("image/png");
+        scaledResults.push({ name: `scaled_${file.name.split('.')[0]}.png`, url: url });
+
         const div = document.createElement('div');
         div.className = 'result-item';
         div.innerHTML = `
@@ -207,6 +220,7 @@ button.onclick = async () => {
     
     progressBar.style.width = '100%';
     progressText.textContent = '¡Proceso de lote terminado!';
+    btnZipEscalar.style.display = "inline-block";
 };
 
 /* ===== LÓGICA DE COMPRESOR ===== */
@@ -214,11 +228,14 @@ const upload = document.getElementById("upload");
 const canvasComp = document.getElementById("canvas");
 const ctxComp = canvasComp.getContext("2d");
 const batchListComp = document.getElementById("batch-list-comp");
+const btnZipComp = document.getElementById("downloadZipComp");
 
 upload.addEventListener("change", async (e) => {
     const files = e.target.files;
     if (!files.length) return;
     batchListComp.innerHTML = "<h4>Procesando lote...</h4>";
+    compressedResults = []; // Reset
+    btnZipComp.style.display = "none";
 
     for (const file of files) {
         const img = await new Promise(resolve => {
@@ -236,6 +253,8 @@ upload.addEventListener("change", async (e) => {
         ctxComp.drawImage(img, 0, 0);
         
         const dataUrl = canvasComp.toDataURL("image/jpeg", 0.7);
+        compressedResults.push({ name: `comp_${file.name.split('.')[0]}.jpg`, url: dataUrl });
+
         const oKB = (file.size / 1024).toFixed(2);
         const cKB = (dataUrl.length * (3 / 4) / 1024).toFixed(2);
 
@@ -253,7 +272,26 @@ upload.addEventListener("change", async (e) => {
         batchListComp.appendChild(div);
     }
     batchListComp.querySelector('h4').remove();
+    btnZipComp.style.display = "inline-block";
 });
+
+/* ===== FUNCIÓN GENÉRICA PARA CREAR ZIP ===== */
+async function generateZip(items, zipName) {
+    const zip = new JSZip();
+    items.forEach(item => {
+        const base64Data = item.url.split(',')[1];
+        zip.file(item.name, base64Data, {base64: true});
+    });
+    const content = await zip.generateAsync({type:"blob"});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(content);
+    link.download = zipName;
+    link.click();
+}
+
+btnZipEscalar.onclick = () => generateZip(scaledResults, "imagenes_escaladas.zip");
+btnZipComp.onclick = () => generateZip(compressedResults, "imagenes_comprimidas.zip");
+
 </script>
 
 </body>
