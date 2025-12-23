@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Herramientas de Imagen – Escalar + Comprimir (Lote)</title>
+<meta name="theme-color" content="#2E7D32">
+<style>
+:root{
+--bg:#e8f5e9;
+--green:#2e7d32;
+--green-2:#388e3c;
+--accent:#81c784;
+--card:#ffffff;
+}
+html,body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);}
+.container{
+max-width:900px;
+margin:20px auto;
+display:grid;
+grid-template-columns:1fr;
+gap:24px;
+padding:16px;
+}
+.card{
+background:var(--card);
+border-radius:14px;
+box-shadow:0 8px 30px rgba(0,0,0,0.08);
+padding:20px;
+box-sizing:border-box;
+}
+h2,h3{color:var(--green-2);margin-top:0}
+button{
+background:var(--green-2);
+color:#fff;
+border:none;
+border-radius:8px;
+padding:10px 16px;
+cursor:pointer;
+margin-top: 10px;
+}
+button:hover{background:var(--green);}
+input,select{
+padding:8px;
+border-radius:8px;
+border:2px solid var(--accent);
+margin-bottom:10px;
+}
+.result-item {
+    border: 1px solid #c8e6c9;
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+    background: #f9fdf9;
+}
+.result-item img { max-width: 120px; border-radius: 4px; border: 1px solid #ddd; }
+#batch-list, #batch-list-comp { margin-top: 15px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div class="card" id="image-upscaler">
+<h3>✨ Escalar Imagen Ultra (Lote Ilimitado)</h3>
+<p>Escala imágenes por interpolación bicúbica profesional directamente en tu navegador. Todo el proceso es local, sin IA ni servidores externos.</p>
+
+<input type="file" id="inputImage" accept="image/*" multiple><br>
+
+<label>Nivel de Escalado</label><br>
+<select id="scaleLevel">
+<option value="1">x1</option>
+<option value="2">x2</option>
+<option value="3">x3</option>
+<option value="4">x4</option>
+<option value="5">x5</option>
+<option value="6">x6</option>
+<option value="7">x7</option>
+<option value="8">x8</option>
+</select><br>
+
+<button id="processButton">Escalar Todas las Imágenes</button>
+
+<div id="progressContainer" style="display:none;margin-top:10px;">
+<div style="width:100%;background:#c8e6c9;border-radius:6px;overflow:hidden;">
+<div id="progressBar" style="height:14px;width:0%;background:#2e7d32"></div>
+</div>
+<span id="progressText">0%</span>
+</div>
+
+<div id="batch-list"></div>
+</div>
+
+<div class="card">
+<h3>🔽 Compresor de Imágenes (Lote Ilimitado)</h3>
+<p>Comprime imágenes manteniendo buena calidad visual. Todo ocurre localmente en tu dispositivo, sin IA ni servidores externos.</p>
+
+<input type="file" id="upload" accept="image/*" multiple><br>
+<div id="batch-list-comp"></div>
+<canvas id="canvas" style="display:none"></canvas>
+</div>
+
+</div>
+
+<script>
+/* ===== LÓGICA DE ESCALADO ===== */
+const input = document.getElementById('inputImage');
+const button = document.getElementById('processButton');
+const scaleSelect = document.getElementById('scaleLevel');
+const progressContainer = document.getElementById('progressContainer');
+const progressBar = document.getElementById('progressBar');
+const progressText = document.getElementById('progressText');
+const batchList = document.getElementById('batch-list');
+
+// FUNCIÓN DE INTERPOLACIÓN
+function cubicInterpolate(v0,v1,v2,v3,x){
+return v1+0.5*x*(v2-v0+x*(2*v0-5*v1+4*v2-v3+x*(3*(v1-v2)+v3-v0)));
+}
+function bicubicInterpolate(p,x,y){
+const a=[];
+for(let i=0;i<4;i++)a[i]=cubicInterpolate(p[i][0],p[i][1],p[i][2],p[i][3],x);
+return cubicInterpolate(a[0],a[1],a[2],a[3],y);
+}
+
+async function upscaleBicubic(img,scale,cb){
+const w=img.width,h=img.height;
+const c=document.createElement('canvas');
+const ctx=c.getContext('2d');
+c.width=w*scale;c.height=h*scale;
+ctx.drawImage(img,0,0);
+const o=ctx.getImageData(0,0,w,h).data;
+const n=ctx.createImageData(c.width,c.height);
+for(let j=0;j<c.height;j++){
+const y=j/(c.height-1)*(h-1);
+const yi=Math.floor(y),yf=y-yi;
+for(let i=0;i<c.width;i++){
+const x=i/(c.width-1)*(w-1);
+const xi=Math.floor(x),xf=x-xi;
+for(let k=0;k<4;k++){
+const p=[];
+for(let m=-1;m<=2;m++){
+const row=[];
+let yy=Math.min(h-1,Math.max(0,yi+m));
+for(let n2=-1;n2<=2;n2++){
+let xx=Math.min(w-1,Math.max(0,xi+n2));
+row.push(o[(yy*w+xx)*4+k]);
+}
+p.push(row);
+}
+n.data[(j*c.width+i)*4+k]=Math.min(255,Math.max(0,bicubicInterpolate(p,xf,yf)));
+}
+}
+if(cb && j%15===0)cb(j/c.height);
+await new Promise(r=>setTimeout(r,0));
+}
+ctx.putImageData(n,0,0);
+return c;
+}
+
+button.onclick = async () => {
+    const files = input.files;
+    if (files.length === 0) return alert("Selecciona imágenes");
+    
+    progressContainer.style.display = 'block';
+    batchList.innerHTML = "";
+    const sc = parseInt(scaleSelect.value);
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        progressText.textContent = `Procesando ${i+1}/${files.length}: ${file.name}`;
+        
+        const img = await new Promise(resolve => {
+            const r = new FileReader();
+            r.onload = (e) => {
+                const tempImg = new Image();
+                tempImg.onload = () => resolve(tempImg);
+                tempImg.src = e.target.result;
+            };
+            r.readAsDataURL(file);
+        });
+
+        const canvasResult = await upscaleBicubic(img, sc, p => {
+            const pc = Math.floor(p * 100);
+            progressBar.style.width = pc + '%';
+        });
+
+        const url = canvasResult.toDataURL("image/png");
+        const div = document.createElement('div');
+        div.className = 'result-item';
+        div.innerHTML = `
+            <img src="${url}">
+            <div>
+                <strong>${file.name}</strong> (Escalado x${sc})<br>
+                <a href="${url}" download="escalada_${file.name}" style="background:#2e7d32;color:#fff;padding:5px 10px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:5px;">Descargar</a>
+            </div>
+        `;
+        batchList.appendChild(div);
+    }
+    
+    progressBar.style.width = '100%';
+    progressText.textContent = '¡Proceso de lote terminado!';
+};
+
+/* ===== LÓGICA DE COMPRESOR ===== */
+const upload = document.getElementById("upload");
+const canvasComp = document.getElementById("canvas");
+const ctxComp = canvasComp.getContext("2d");
+const batchListComp = document.getElementById("batch-list-comp");
+
+upload.addEventListener("change", async (e) => {
+    const files = e.target.files;
+    if (!files.length) return;
+    batchListComp.innerHTML = "<h4>Procesando lote...</h4>";
+
+    for (const file of files) {
+        const img = await new Promise(resolve => {
+            const r = new FileReader();
+            r.onload = ev => {
+                const tempImg = new Image();
+                tempImg.onload = () => resolve(tempImg);
+                tempImg.src = ev.target.result;
+            };
+            r.readAsDataURL(file);
+        });
+
+        canvasComp.width = img.width;
+        canvasComp.height = img.height;
+        ctxComp.drawImage(img, 0, 0);
+        
+        const dataUrl = canvasComp.toDataURL("image/jpeg", 0.7);
+        const oKB = (file.size / 1024).toFixed(2);
+        const cKB = (dataUrl.length * (3 / 4) / 1024).toFixed(2);
+
+        const div = document.createElement('div');
+        div.className = 'result-item';
+        div.innerHTML = `
+            <img src="${dataUrl}">
+            <div>
+                <strong>${file.name}</strong><br>
+                Original: ${oKB} KB | Comprimido: ${cKB} KB<br>
+                Ahorro: ${(100 - (cKB * 100 / oKB)).toFixed(1)}% <br>
+                <a href="${dataUrl}" download="comprimida_${file.name}" style="background:#2e7d32;color:#fff;padding:5px 10px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:5px;">Descargar</a>
+            </div>
+        `;
+        batchListComp.appendChild(div);
+    }
+    batchListComp.querySelector('h4').remove();
+});
+</script>
+
+</body>
+</html>
