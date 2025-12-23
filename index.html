@@ -2,12 +2,15 @@
 <html lang="es">
 <head>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
 <link rel="icon" type="image/x-icon" sizes="32x32" href="favicon.ico">
 <link rel="icon" type="image/x-icon" sizes="256x256" href="favicon.ico">
 <link rel="apple-touch-icon" href="favicon.ico">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Herramientas de Imagen – Escalar + Comprimir (Lote Ilimitado)</title>
+<title>💎 Herramientas de Imagen – Escalar+Recortar+Comprimir</title>
 <meta name="theme-color" content="#2E7D32">
 <style>
 :root{
@@ -22,50 +25,42 @@ html,body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background:v
 max-width:900px;
 margin:20px auto;
 display:grid;
-grid-template-columns:1fr;
-gap:24px;
-padding:16px;
+grid-template-columns:1fr; gap:24px; padding:16px;
 }
 .card{
-background:var(--card);
-border-radius:14px;
+background:var(--card); border-radius:14px;
 box-shadow:0 8px 30px rgba(0,0,0,0.08);
-padding:20px;
-box-sizing:border-box;
+padding:20px; box-sizing:border-box;
 }
 h2,h3{color:var(--green-2);margin-top:0}
 button{
-background:var(--green-2);
-color:#fff;
-border:none;
-border-radius:8px;
-padding:10px 16px;
-cursor:pointer;
-margin-top: 10px;
+background:var(--green-2); color:#fff; border:none;
+border-radius:8px; padding:10px 16px; cursor:pointer; margin-top: 10px;
 }
 button:hover{background:var(--green);}
 .btn-zip{background:#2e7d32; margin-left: 10px;}
 .btn-zip:hover{background:#527d2e;}
 
 input,select{
-padding:8px;
-border-radius:8px;
-border:2px solid var(--accent);
-margin-bottom:10px;
+padding:8px; border-radius:8px;
+border:2px solid var(--accent); margin-bottom:10px;
 }
 .result-item {
-    border: 1px solid #c8e6c9;
-    border-radius: 8px;
-    padding: 10px;
-    margin-top: 10px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 15px;
-    background: #f9fdf9;
+    border: 1px solid #c8e6c9; border-radius: 8px;
+    padding: 10px; margin-top: 10px;
+    display: flex; flex-wrap: wrap; align-items: center;
+    gap: 15px; background: #f9fdf9;
 }
 .result-item img { max-width: 120px; border-radius: 4px; border: 1px solid #ddd; }
 #batch-list, #batch-list-comp { margin-top: 15px; }
+
+/* Estilos Cropper */
+.cropper-container-wrapper {
+    max-width: 100%; max-height: 500px; margin-bottom: 15px;
+    background: #000; border-radius: 8px; overflow: hidden; display: none;
+}
+#cropper-image { max-width: 100%; }
+.crop-controls { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
 </style>
 </head>
 <body>
@@ -75,38 +70,48 @@ margin-bottom:10px;
 <div class="card" id="image-upscaler">
 <h3>✨ Escalar Imagen Ultra (Lote Ilimitado)</h3>
 <p>Escala imágenes por interpolación bicúbica profesional directamente en tu navegador. Todo el proceso es local, sin IA ni servidores externos.</p>
-
 <input type="file" id="inputImage" accept="image/*" multiple><br>
-
 <label>Nivel de Escalado</label><br>
 <select id="scaleLevel">
-<option value="1">x1</option>
-<option value="2">x2</option>
-<option value="3">x3</option>
-<option value="4">x4</option>
-<option value="5">x5</option>
-<option value="6">x6</option>
-<option value="7">x7</option>
-<option value="8">x8</option>
+<option value="1">x1</option><option value="2">x2</option><option value="3">x3</option>
+<option value="4">x4</option><option value="5">x5</option><option value="6">x6</option>
+<option value="7">x7</option><option value="8">x8</option>
 </select><br>
-
 <button id="processButton">Escalar Todas las Imágenes</button>
 <button id="downloadZipEscalar" class="btn-zip" style="display:none;">📦 Descargar Lote (.ZIP)</button>
-
 <div id="progressContainer" style="display:none;margin-top:10px;">
 <div style="width:100%;background:#c8e6c9;border-radius:6px;overflow:hidden;">
 <div id="progressBar" style="height:14px;width:0%;background:#2e7d32"></div>
 </div>
 <span id="progressText">0%</span>
 </div>
-
 <div id="batch-list"></div>
+</div>
+
+<div class="card">
+<h3>✂️ Recortador Profesional</h3>
+<p>Edición de precisión milimétrica con procesamiento local. Recorta, Rota y Ajusta tus imágenes sin IA, sin servidores y sin rastro de datos externos.</p>
+<input type="file" id="inputCrop" accept="image/*"><br>
+<div class="cropper-container-wrapper" id="cropperWrapper">
+    <img id="cropper-image">
+</div>
+<div id="cropControls" style="display:none;">
+    <div class="crop-controls">
+        <button onclick="cropper.setAspectRatio(1.7777)">16:9</button>
+        <button onclick="cropper.setAspectRatio(1.3333)">4:3</button>
+        <button onclick="cropper.setAspectRatio(1)">1:1</button>
+        <button onclick="cropper.setAspectRatio(NaN)">Libre</button>
+        <button onclick="cropper.rotate(-90)" style="background:#666">↺ Rotar</button>
+        <button onclick="cropper.rotate(90)" style="background:#666">↻ Rotar</button>
+    </div>
+    <button id="btnCropDone" style="background:#2e7d32">Finalizar Recorte</button>
+</div>
+<div id="cropResult"></div>
 </div>
 
 <div class="card">
 <h3>🔽 Compresor de Imágenes (Lote Ilimitado)</h3>
 <p>Comprime imágenes manteniendo buena calidad visual. Todo ocurre localmente en tu dispositivo, sin IA ni servidores externos.</p>
-
 <input type="file" id="upload" accept="image/*" multiple><br>
 <button id="downloadZipComp" class="btn-zip" style="display:none;">📦 Descargar Comprimidas (.ZIP)</button>
 <div id="batch-list-comp"></div>
@@ -116,11 +121,46 @@ margin-bottom:10px;
 </div>
 
 <script>
-/* Arreglos para almacenar resultados para el ZIP */
 let scaledResults = [];
 let compressedResults = [];
 
-/* ===== LÓGICA DE ESCALADO ===== */
+/* ===== LÓGICA DE RECORTADOR ===== */
+let cropper;
+const inputCrop = document.getElementById('inputCrop');
+const cropperImg = document.getElementById('cropper-image');
+const cropperWrapper = document.getElementById('cropperWrapper');
+const cropControls = document.getElementById('cropControls');
+const cropResult = document.getElementById('cropResult');
+
+inputCrop.onchange = (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        if(cropper) cropper.destroy();
+        cropperImg.src = event.target.result;
+        cropperWrapper.style.display = 'block';
+        cropControls.style.display = 'block';
+        cropper = new Cropper(cropperImg, { viewMode: 1, autoCropArea: 1, responsive: true });
+    };
+    reader.readAsDataURL(file);
+};
+
+document.getElementById('btnCropDone').onclick = () => {
+    const canvas = cropper.getCroppedCanvas();
+    const url = canvas.toDataURL("image/png");
+    cropResult.innerHTML = `
+        <div class="result-item">
+            <img src="${url}">
+            <div>
+                <strong>Imagen Recortada</strong><br>
+                <a href="${url}" download="recorte.png" style="background:#2e7d32;color:#fff;padding:5px 10px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:5px;">Descargar Recorte</a>
+            </div>
+        </div>
+    `;
+};
+
+/* ===== LÓGICA DE ESCALADO (TU CÓDIGO) ===== */
 const input = document.getElementById('inputImage');
 const button = document.getElementById('processButton');
 const scaleSelect = document.getElementById('scaleLevel');
@@ -177,17 +217,14 @@ return c;
 button.onclick = async () => {
     const files = input.files;
     if (files.length === 0) return alert("Selecciona imágenes");
-    
     progressContainer.style.display = 'block';
     batchList.innerHTML = "";
-    scaledResults = []; // Reset
+    scaledResults = [];
     btnZipEscalar.style.display = "none";
     const sc = parseInt(scaleSelect.value);
-
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
         progressText.textContent = `Procesando ${i+1}/${files.length}: ${file.name}`;
-        
         const img = await new Promise(resolve => {
             const r = new FileReader();
             r.onload = (e) => {
@@ -197,33 +234,23 @@ button.onclick = async () => {
             };
             r.readAsDataURL(file);
         });
-
         const canvasResult = await upscaleBicubic(img, sc, p => {
             const pc = Math.floor(p * 100);
             progressBar.style.width = pc + '%';
         });
-
         const url = canvasResult.toDataURL("image/png");
         scaledResults.push({ name: `scaled_${file.name.split('.')[0]}.png`, url: url });
-
         const div = document.createElement('div');
         div.className = 'result-item';
-        div.innerHTML = `
-            <img src="${url}">
-            <div>
-                <strong>${file.name}</strong> (Escalado x${sc})<br>
-                <a href="${url}" download="escalada_${file.name}" style="background:#2e7d32;color:#fff;padding:5px 10px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:5px;">Descargar</a>
-            </div>
-        `;
+        div.innerHTML = `<img src="${url}"><div><strong>${file.name}</strong> (Escalado x${sc})<br><a href="${url}" download="escalada_${file.name}" style="background:#2e7d32;color:#fff;padding:5px 10px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:5px;">Descargar</a></div>`;
         batchList.appendChild(div);
     }
-    
     progressBar.style.width = '100%';
     progressText.textContent = '¡Proceso de lote terminado!';
     btnZipEscalar.style.display = "inline-block";
 };
 
-/* ===== LÓGICA DE COMPRESOR ===== */
+/* ===== LÓGICA DE COMPRESOR (RESTAURADA) ===== */
 const upload = document.getElementById("upload");
 const canvasComp = document.getElementById("canvas");
 const ctxComp = canvasComp.getContext("2d");
@@ -234,9 +261,8 @@ upload.addEventListener("change", async (e) => {
     const files = e.target.files;
     if (!files.length) return;
     batchListComp.innerHTML = "<h4>Procesando lote...</h4>";
-    compressedResults = []; // Reset
+    compressedResults = [];
     btnZipComp.style.display = "none";
-
     for (const file of files) {
         const img = await new Promise(resolve => {
             const r = new FileReader();
@@ -247,17 +273,15 @@ upload.addEventListener("change", async (e) => {
             };
             r.readAsDataURL(file);
         });
-
         canvasComp.width = img.width;
         canvasComp.height = img.height;
         ctxComp.drawImage(img, 0, 0);
-        
         const dataUrl = canvasComp.toDataURL("image/jpeg", 0.7);
         compressedResults.push({ name: `comp_${file.name.split('.')[0]}.jpg`, url: dataUrl });
-
         const oKB = (file.size / 1024).toFixed(2);
         const cKB = (dataUrl.length * (3 / 4) / 1024).toFixed(2);
-
+        
+        // AQUÍ ESTÁ EL BLOQUE RESTAURADO
         const div = document.createElement('div');
         div.className = 'result-item';
         div.innerHTML = `
@@ -275,7 +299,6 @@ upload.addEventListener("change", async (e) => {
     btnZipComp.style.display = "inline-block";
 });
 
-/* ===== FUNCIÓN GENÉRICA PARA CREAR ZIP ===== */
 async function generateZip(items, zipName) {
     const zip = new JSZip();
     items.forEach(item => {
@@ -288,10 +311,8 @@ async function generateZip(items, zipName) {
     link.download = zipName;
     link.click();
 }
-
 btnZipEscalar.onclick = () => generateZip(scaledResults, "imagenes_escaladas.zip");
 btnZipComp.onclick = () => generateZip(compressedResults, "imagenes_comprimidas.zip");
-
 </script>
 
 </body>
