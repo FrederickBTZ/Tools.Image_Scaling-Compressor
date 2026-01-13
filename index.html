@@ -72,8 +72,6 @@ border:2px solid var(--accent); margin-bottom:10px;
     <span style="display:block; font-size: 1rem; color: #666; font-weight: normal;">
         Escala, Recorta y Comprime de forma Privada y Gratuita (Online)
 
-<title>Herramientas para Escalar, Recortar y Comprimir Imagenes | Gratis y Seguro</title>
-
     </span>
 </h1>
 </div>
@@ -99,7 +97,18 @@ border:2px solid var(--accent); margin-bottom:10px;
 <span id="progressText">0%</span>
 </div>
 <div id="batch-list"></div>
+<div id="cafecito-escalar" style="display:none; margin-top:20px; text-align:center;">
+  <p>¿Te fue útil el escalado?</p>
+  <a href="https://cafecito.app/thaurock" target="_blank" rel="noopener">
+    <img src="https://cdn.cafecito.app/imgs/buttons/button_6.png"
+         srcset="
+           https://cdn.cafecito.app/imgs/buttons/button_6.png 1x,
+           https://cdn.cafecito.app/imgs/buttons/button_6_2x.png 2x,
+           https://cdn.cafecito.app/imgs/buttons/button_6_3.75x.png 3.75x"
+         alt="Invitame un café en cafecito.app">
+  </a>
 </div>
+</div> <!-- cierre card escalador -->
 
 <div class="card">
 <h3>✂️ Recortar Imagen Online con Precisión Profesional</h3>
@@ -120,7 +129,13 @@ border:2px solid var(--accent); margin-bottom:10px;
     <button id="btnCropDone" style="background:#2e7d32">Finalizar Recorte</button>
 </div>
 <div id="cropResult"></div>
+<div id="cafecito-crop" style="display:none; margin-top:20px; text-align:center;">
+  <p>¿Te sirvió el recorte?</p>
+  <a href="https://cafecito.app/thaurock" target="_blank" rel="noopener">
+    <img src="https://cdn.cafecito.app/imgs/buttons/button_6.png" alt="Invitame un café">
+  </a>
 </div>
+</div> <!-- cierre card recortador -->
 
 <div class="card">
 <h3>🔽 Compresor de Imágenes sin perder calidad online(Lote Ilimitado)</h3>
@@ -128,10 +143,16 @@ border:2px solid var(--accent); margin-bottom:10px;
 <input type="file" id="upload" accept="image/*" multiple><br>
 <button id="downloadZipComp" class="btn-zip" style="display:none;">📦 Descargar Comprimidas (.ZIP)</button>
 <div id="batch-list-comp"></div>
+<div id="cafecito-comp" style="display:none; margin-top:20px; text-align:center;">
+  <p>¿La compresión te ayudó?</p>
+  <a href="https://cafecito.app/thaurock" target="_blank" rel="noopener">
+    <img src="https://cdn.cafecito.app/imgs/buttons/button_6.png" alt="Invitame un café">
+  </a>
+</div>
 <canvas id="canvas" style="display:none"></canvas>
 </div>
-
-</div>
+</div> <!-- cierre card Compresor -->
+</div> <!-- cierre container -->
 
 <script>
 let scaledResults = [];
@@ -160,6 +181,7 @@ inputCrop.onchange = (e) => {
 };
 
 document.getElementById('btnCropDone').onclick = () => {
+if (!cropper) return;
     const canvas = cropper.getCroppedCanvas();
     const url = canvas.toDataURL("image/png");
     cropResult.innerHTML = `
@@ -171,6 +193,7 @@ document.getElementById('btnCropDone').onclick = () => {
             </div>
         </div>
     `;
+document.getElementById("cafecito-crop").style.display = "block";
 };
 
 /* ===== LÓGICA DE ESCALADO (TU CÓDIGO) ===== */
@@ -261,6 +284,7 @@ button.onclick = async () => {
     progressBar.style.width = '100%';
     progressText.textContent = '¡Proceso de lote terminado!';
     btnZipEscalar.style.display = "inline-block";
+document.getElementById("cafecito-escalar").style.display = "block";
 };
 
 /* ===== LÓGICA DE COMPRESOR (RESTAURADA) ===== */
@@ -310,6 +334,7 @@ upload.addEventListener("change", async (e) => {
     }
     batchListComp.querySelector('h4').remove();
     btnZipComp.style.display = "inline-block";
+document.getElementById("cafecito-comp").style.display = "block";
 });
 
 async function generateZip(items, zipName) {
